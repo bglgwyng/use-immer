@@ -1,4 +1,10 @@
-import produce, { Draft, nothing, freeze } from "immer";
+import produce, {
+  Draft,
+  nothing,
+  freeze,
+  createDraft,
+  finishDraft,
+} from "immer";
 import { useState, useReducer, useCallback, useMemo, Dispatch } from "react";
 
 export type Reducer<S = any, A = any> = (
@@ -38,4 +44,23 @@ export function useImmerReducer(
 ) {
   const cachedReducer = useMemo(() => produce(reducer), [reducer]);
   return useReducer(cachedReducer, initialState as any, initialAction);
+}
+
+export function useImmerDraft<S = any, A = any>(
+  initialValue: S | (() => S)
+): [Draft<S>, (newState?: S) => void];
+export function useImmerDraft(initialValue: any) {
+  const [val, updateValue] = useState(() =>
+    freeze(
+      typeof initialValue === "function" ? initialValue() : initialValue,
+      true
+    )
+  );
+
+  const draft = useMemo(() => createDraft(val), [val]);
+  return [
+    draft,
+    (...args: any[]) =>
+      updateValue(args.length ? freeze(args[0]) : finishDraft(draft)),
+  ];
 }
