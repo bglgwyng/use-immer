@@ -4,6 +4,7 @@ import produce, {
   freeze,
   createDraft,
   finishDraft,
+  isDraftable,
 } from "immer";
 import { useState, useReducer, useCallback, useMemo, Dispatch } from "react";
 
@@ -57,7 +58,10 @@ export function useImmerDraft(initialValue: any) {
     )
   );
 
-  const draft = useMemo(() => createDraft(val), [val]);
+  const draft = useMemo(
+    () => (isDraftable(val) ? createDraft(val) : val),
+    [val]
+  );
   return [
     draft,
     (...args: any[]) =>
